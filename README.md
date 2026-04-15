@@ -1,5 +1,11 @@
 # Agentic Workspaces - OpenShift DevSpaces PoC
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![OpenShift DevSpaces](https://img.shields.io/badge/OpenShift-DevSpaces-EE0000?logo=redhat)](https://developers.redhat.com/products/openshift-dev-spaces/overview)
+[![Model Context Protocol](https://img.shields.io/badge/MCP-Enabled-blue)](https://modelcontextprotocol.io)
+
+> **Try it now:** [Open in DevSpaces](#deploy-to-openshift-devspaces) | [Quick Start (5 min)](QUICKSTART.md) | [View Demo](https://github.com/balajisiva/agentic-devspaces-demo)
+
 ## Concept: Governed Agentic Development in the Cloud
 
 This proof-of-concept demonstrates how **OpenShift DevSpaces can be pre-configured as agentic AI workspaces**, addressing a critical enterprise need: enabling AI-powered development while maintaining governance, security, and compliance.

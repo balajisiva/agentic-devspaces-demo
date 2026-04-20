@@ -43,11 +43,11 @@ Traditional AI agent development happens on ungoverned local machines where:
 
 **Agentic workspaces** provide:
 
-✅ **5-minute workspace startup** (vs hours for local setup)
-✅ **Zero secrets on local machines** (100% Vault-managed)
-✅ **100% audit coverage** of AI operations
-✅ **Consistent environment** across all developers
-✅ **Policy enforcement** without developer intervention
+- ✅ **5-minute workspace startup** (vs hours for local setup)
+- ✅ **Zero secrets on local machines** (100% Vault-managed)
+- ✅ **100% audit coverage** of AI operations
+- ✅ **Consistent environment** across all developers
+- ✅ **Policy enforcement** without developer intervention
 
 ---
 
@@ -181,11 +181,11 @@ See our **[Business Value Guide](business-value)** for ROI analysis:
 
 ## Documentation
 
-📘 **[Quick Start (5 min)](quickstart)** - Get up and running fast
-🚀 **[CI/CD Use Cases](ci-use-cases)** - 6 real-world examples with code
-📦 **[Deployment Guide](deployment-ci)** - Complete setup instructions
-💰 **[Business Value](business-value)** - ROI analysis & stakeholder talking points
-🏗️ **[Architecture](https://github.com/balajisiva/agentic-devspaces-demo/blob/main/PROJECT_STRUCTURE.md)** - Technical deep dive
+- 📘 **[Quick Start (5 min)](quickstart)** - Get up and running fast
+- 🚀 **[CI/CD Use Cases](ci-use-cases)** - 6 real-world examples with code
+- 📦 **[Deployment Guide](deployment-ci)** - Complete setup instructions
+- 💰 **[Business Value](business-value)** - ROI analysis & stakeholder talking points
+- 🏗️ **[Architecture](https://github.com/balajisiva/agentic-devspaces-demo/blob/main/PROJECT_STRUCTURE.md)** - Technical deep dive
 
 ---
 
@@ -259,7 +259,7 @@ API keys rotate automatically via Vault integration, no code changes needed.
 ## Get Started
 
 1. **[Quick Start Guide](quickstart)** - 5 minutes to first workspace
-2. **[Choose Your Tier](deployment-ci#quick-decision-matrix)** - Which config for your use case
+2. **[Choose Your Tier](deployment-ci)** - Which config for your use case
 3. **[Browse Use Cases](ci-use-cases)** - See what's possible
 4. **[Deploy to Production](deployment-ci)** - Complete deployment guide
 

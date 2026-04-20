@@ -319,10 +319,42 @@ spec:
               for FILE in $FILES_WITHOUT_TESTS; do
                 echo "Generating tests for $FILE..."
 
-                # AI reads file (Filesystem MCP)
-                # AI generates test file using Anthropic API
-                # AI writes test (Filesystem MCP)
-                python ai-test-generator.py --file "$FILE" --api-key "$ANTHROPIC_API_KEY"
+                # Read source code (Filesystem MCP)
+                SOURCE_CODE=$(cat "$FILE")
+
+                # Call Anthropic API to generate tests
+                TEST_CODE=$(curl -s https://api.anthropic.com/v1/messages \
+                  -H "x-api-key: $ANTHROPIC_API_KEY" \
+                  -H "anthropic-version: 2023-06-01" \
+                  -H "content-type: application/json" \
+                  -d @- <<EOF | jq -r '.content[0].text'
+{
+  "model": "claude-3-5-sonnet-20241022",
+  "max_tokens": 4096,
+  "messages": [{
+    "role": "user",
+    "content": "Generate comprehensive pytest unit tests for this Python code. Include:
+- Test class with descriptive name
+- Tests for happy path, edge cases, and error conditions
+- Proper fixtures if needed
+- Docstrings
+
+Source file: $FILE
+
+\`\`\`python
+$SOURCE_CODE
+\`\`\`
+
+Return ONLY the test code, no explanations."
+  }]
+}
+EOF
+                )
+
+                # Write test file (Filesystem MCP)
+                TEST_FILE="tests/test_$(basename $FILE)"
+                echo "$TEST_CODE" > "$TEST_FILE"
+                echo "  ✓ Generated $TEST_FILE"
               done
 
               # Commit generated tests using Git MCP
@@ -349,6 +381,13 @@ spec:
 - AI generates comprehensive unit tests
 - Tests committed and run in same pipeline
 - No manual test writing needed for boilerplate
+
+**What actually happens:**
+1. **Filesystem MCP** reads source code file
+2. **Anthropic API** (Claude) generates pytest tests based on the code
+3. **Filesystem MCP** writes generated test file to `tests/` directory
+4. **Git MCP** commits the new tests
+5. Pipeline runs the tests to verify they work
 
 ---
 

@@ -7,11 +7,14 @@ This document shows real-world examples of using agentic MCP workspaces in produ
 **What is "Using in CI"?**
 
 Integrating AI-powered MCP capabilities into automated CI/CD pipelines (not just developer workspaces):
-- **Jenkins** pipelines
-- **Tekton** pipelines (OpenShift)
-- **GitHub Actions**
-- **GitLab CI**
+- **Tekton** pipelines (OpenShift native - recommended for Red Hat environments)
+- **OpenShift Pipelines** (Tekton-based)
+- **Jenkins** pipelines (with OpenShift integration)
+- **GitHub Actions** (with Red Hat runners)
+- **GitLab CI** (with RHEL runners)
 - **ArgoCD workflows**
+
+> **Red Hat Focus:** All examples use Red Hat Universal Base Images (UBI) and prioritize OpenShift-native tooling (Tekton/OpenShift Pipelines).
 
 **Key Benefits:**
 - Automated code analysis and review
@@ -83,7 +86,13 @@ This gives you AI + GitHub integration without approval gates or audit logging (
 
 > **Note:** True AI code review requires an AI service (Anthropic, OpenAI, etc.). If you only need static analysis (linting, security scanning), use Tier 2 (Standard) with tools like SonarQube, CodeQL, or Semgrep instead.
 
-### GitHub Actions Implementation
+### OpenShift Pipelines (Tekton) Implementation - Recommended
+
+See **Use Case 5** below for a complete Tekton example with OpenShift integration.
+
+### GitHub Actions Implementation (Alternative)
+
+> **Note:** For Red Hat environments, use self-hosted RHEL runners instead of GitHub-hosted runners.
 
 ```yaml
 # .github/workflows/ai-code-review.yml
@@ -94,7 +103,7 @@ on:
 
 jobs:
   ai-review:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, RHEL9]  # Self-hosted Red Hat runner
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -708,7 +717,7 @@ schedule:
   cron: "0 2 * * 1"  # Every Monday at 2 AM
 jobs:
   weekly-ai-refactoring:
-    runs-on: ubuntu-latest
+    runs-on: RHEL9  # Red Hat runner
     steps:
       - uses: actions/checkout@v3
       - name: AI Code Quality Improvements
@@ -722,7 +731,7 @@ jobs:
 on: [push]
 jobs:
   ai-analysis:
-    runs-on: ubuntu-latest
+    runs-on: RHEL9  # Red Hat runner
     steps:
       - uses: actions/checkout@v3
       - name: AI Analysis

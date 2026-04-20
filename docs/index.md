@@ -163,7 +163,7 @@ See our **[CI/CD Use Cases Guide](ci-use-cases)** for complete examples:
 - **Intelligent Refactoring** - Code quality improvements (Tier 1)
 - **Migration Assistant** - Legacy code upgraded (Tier 1)
 
-**Platforms covered:** Tekton, Jenkins, GitHub Actions, GitLab CI
+**Platforms covered:** OpenShift Pipelines (Tekton) ⭐, Jenkins on OpenShift, GitHub Actions (RHEL runners)
 
 ---
 

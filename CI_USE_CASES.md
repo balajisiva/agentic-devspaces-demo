@@ -26,14 +26,53 @@ Integrating AI-powered MCP capabilities into automated CI/CD pipelines (not just
 
 | Use Case | Recommended Tier | Why |
 |----------|-----------------|-----|
-| Code analysis/linting | **Minimal** | Local file access only, no tokens needed |
-| Test generation (commit locally) | **Minimal** | Filesystem + local git sufficient |
+| Static code analysis/linting | **Minimal** | Local file access only, no AI needed |
+| Rule-based test generation | **Minimal** | Template-based, no AI needed |
+| AI-powered test generation | **Full*** | Needs ANTHROPIC_API_KEY for AI |
 | Auto-create PRs with fixes | **Standard** | Needs GitHub MCP for PR creation |
-| PR review bot (comment on PRs) | **Standard** | Needs GitHub MCP for comments |
-| Issue auto-updates | **Standard** | Needs GitHub MCP for issue API |
+| AI-powered code review | **Full*** | Needs ANTHROPIC_API_KEY + GITHUB_TOKEN |
+| Issue auto-updates (non-AI) | **Standard** | Needs GitHub MCP for issue API |
 | Interactive development | **Full** | Needs all features + governance |
 
-**Rule of thumb:** Use Tier 1 (Minimal) for CI unless you need GitHub API integration, then use Tier 2 (Standard). Tier 3 (Full) is for developer workspaces, not CI.
+\* For CI use, consider creating a "CI-AI" tier: ANTHROPIC_API_KEY + GITHUB_TOKEN without governance overhead (see section below)
+
+**Rule of thumb:**
+- Use Tier 1 (Minimal) for CI unless you need GitHub API integration
+- Use Tier 2 (Standard) for GitHub PR/issue automation
+- Use Tier 3 (Full) if you need AI-powered analysis (requires ANTHROPIC_API_KEY)
+- For production CI with AI, consider creating a custom "CI-AI" tier (see below)
+
+### Optional: CI-AI Tier (For AI-Powered CI without Full Governance)
+
+If you need AI capabilities in CI but don't want the full governance overhead of Tier 3:
+
+**Create a custom tier:**
+```json
+// mcp-config-ci-ai.json
+{
+  "mcpServers": {
+    "filesystem": { "enabled": true, "governance": { "audit_logging": false } },
+    "git": { "enabled": true, "governance": { "audit_logging": false } },
+    "github": {
+      "enabled": true,
+      "env": { "GITHUB_TOKEN": "${GITHUB_TOKEN}" },
+      "governance": { "audit_logging": false }
+    }
+  },
+  "governance": { "enabled": false }  // Disable governance for CI speed
+}
+```
+
+**Add to devfile:**
+```yaml
+env:
+  - name: ANTHROPIC_API_KEY
+    value: "${ANTHROPIC_API_KEY}"
+  - name: GITHUB_TOKEN
+    value: "${GITHUB_TOKEN}"
+```
+
+This gives you AI + GitHub integration without approval gates or audit logging (faster for CI).
 
 ---
 
@@ -41,7 +80,9 @@ Integrating AI-powered MCP capabilities into automated CI/CD pipelines (not just
 
 **Goal:** AI reviews every pull request and posts comments with suggestions.
 
-**Tier:** Standard (requires GITHUB_TOKEN for PR comments)
+**Tier:** Full (requires ANTHROPIC_API_KEY for AI analysis + GITHUB_TOKEN for PR comments)
+
+> **Note:** True AI code review requires an AI service (Anthropic, OpenAI, etc.). If you only need static analysis (linting, security scanning), use Tier 2 (Standard) with tools like SonarQube, CodeQL, or Semgrep instead.
 
 ### GitHub Actions Implementation
 
@@ -61,15 +102,19 @@ jobs:
 
       - name: Setup DevSpaces config
         run: |
-          cp .devfile-ci-standard.yaml .devfile.yaml
-          cp mcp-config-ci-standard.json .mcp/config.json
+          # Use Tier 3 (Full) for AI capabilities
+          # OR create custom tier with ANTHROPIC_API_KEY + GITHUB_TOKEN
+          cp .devfile-ci-full.yaml .devfile.yaml
+          cp mcp-config-ci-full.json .mcp/config.json
 
       - name: Run AI Code Review
         env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # MCP servers auto-configured
           # Filesystem MCP reads changed files
+          # AI analyzes code (requires ANTHROPIC_API_KEY)
           # GitHub MCP posts review comments
           ./scripts/ai-code-review.sh "${{ github.event.pull_request.number }}"
 ```
@@ -110,7 +155,9 @@ echo "✓ AI code review complete"
 
 **Goal:** When code is committed without tests, AI generates unit tests automatically.
 
-**Tier:** Minimal (only needs local filesystem and git)
+**Tier:** Full (requires ANTHROPIC_API_KEY for AI test generation)
+
+> **Note:** True AI test generation requires an AI service. For template-based or coverage-driven test generation (not AI), use tools like `pytest-cov` with Tier 1 (Minimal).
 
 ### Tekton Pipeline Implementation
 
@@ -159,15 +206,21 @@ spec:
               #!/bin/bash
               cd $(workspaces.source.path)
 
-              # Use Tier 1 config (no tokens needed)
-              cp .devfile-ci-minimal.yaml .devfile.yaml
+              # Use Tier 3 config (requires ANTHROPIC_API_KEY for AI)
+              cp .devfile-ci-full.yaml .devfile.yaml
               mkdir -p .mcp
-              cp mcp-config-ci-minimal.json .mcp/config.json
+              cp mcp-config-ci-full.json .mcp/config.json
 
-              echo "✓ Agentic environment configured (minimal tier)"
+              echo "✓ Agentic environment configured (full tier - AI enabled)"
 
           - name: ai-generate-tests
             image: quay.io/devfile/universal-developer-image:ubi8-latest
+            env:
+              - name: ANTHROPIC_API_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: ci-anthropic-key
+                    key: ANTHROPIC_API_KEY
             script: |
               #!/bin/bash
               cd $(workspaces.source.path)
@@ -175,14 +228,14 @@ spec:
               # Find files without tests
               FILES_WITHOUT_TESTS=$(./scripts/find-untested-files.sh)
 
-              # For each file, AI generates tests using Filesystem MCP
+              # For each file, AI generates tests
               for FILE in $FILES_WITHOUT_TESTS; do
                 echo "Generating tests for $FILE..."
 
                 # AI reads file (Filesystem MCP)
-                # AI generates test file
+                # AI generates test file using Anthropic API
                 # AI writes test (Filesystem MCP)
-                python ai-test-generator.py --file "$FILE"
+                python ai-test-generator.py --file "$FILE" --api-key "$ANTHROPIC_API_KEY"
               done
 
               # Commit generated tests using Git MCP
@@ -554,7 +607,9 @@ spec:
 
 **Goal:** Automatically migrate legacy code to modern versions.
 
-**Tier:** Minimal (local filesystem operations)
+**Tier:** Minimal (using rule-based tools like `2to3`) OR Full (for AI-powered intelligent migration)
+
+> **Note:** This example uses Python's built-in `2to3` tool (rule-based, not AI). For intelligent AI-powered migration that understands context and makes smart decisions, use Tier 3 (Full) with ANTHROPIC_API_KEY.
 
 ### Simple Shell Script (Can run in any CI)
 
@@ -587,10 +642,11 @@ echo "Found $(echo $PY2_FILES | wc -w) Python 2 files to migrate"
 for FILE in $PY2_FILES; do
     echo "Migrating $FILE to Python 3..."
 
-    # AI reads file (Filesystem MCP)
-    # AI converts to Python 3 syntax
-    # AI writes updated file (Filesystem MCP)
-    python ai-python-migrator.py --file "$FILE" --target-version 3.9
+    # Option A: Rule-based migration (no AI needed - Tier 1)
+    2to3 -w "$FILE"
+
+    # Option B: AI-powered migration (requires ANTHROPIC_API_KEY - Tier 3)
+    # python ai-python-migrator.py --file "$FILE" --target-version 3.9
 
     echo "✓ Migrated $FILE"
 done

@@ -1,0 +1,24 @@
+title: Agentic Workspaces - OpenShift DevSpaces
+description: Governed AI-powered development environments in the cloud
+theme: jekyll-theme-cayman
+show_downloads: true
+
+# GitHub metadata
+repository: balajisiva/agentic-devspaces-demo
+github:
+  repository_url: https://github.com/balajisiva/agentic-devspaces-demo
+
+# Navigation
+nav_links:
+  - title: Home
+    url: /
+  - title: Quick Start
+    url: /quickstart
+  - title: CI/CD Use Cases
+    url: /ci-use-cases
+  - title: Deployment Guide
+    url: /deployment-ci
+  - title: Business Value
+    url: /business-value
+  - title: GitHub
+    url: https://github.com/balajisiva/agentic-devspaces-demo

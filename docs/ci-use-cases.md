@@ -29,17 +29,16 @@ Integrating AI-powered MCP capabilities into automated CI/CD pipelines (not just
 
 ## Quick Reference: Which Tier for Which Use Case?
 
-| Use Case | Recommended Tier | Why |
-|----------|-----------------|-----|
-| Static code analysis/linting | **Minimal** | Local file access only, no AI needed |
-| Rule-based test generation | **Minimal** | Template-based, no AI needed |
-| AI-powered test generation | **Full*** | Needs ANTHROPIC_API_KEY for AI |
-| Auto-create PRs with fixes | **Standard** | Needs GitHub MCP for PR creation |
-| AI-powered code review | **Full*** | Needs ANTHROPIC_API_KEY + GITHUB_TOKEN |
-| Issue auto-updates (non-AI) | **Standard** | Needs GitHub MCP for issue API |
-| Interactive development | **Full** | Needs all features + governance |
+| Use Case | Recommended Tier | Tokens Required |
+|----------|-----------------|------------------|
+| **Use Case 1:** Automated Code Review Bot | **Full*** | ANTHROPIC_API_KEY + GITHUB_TOKEN |
+| **Use Case 2:** Auto-Generate Tests | **Full*** | ANTHROPIC_API_KEY |
+| **Use Case 3:** Auto-Documentation | **Standard** | GITHUB_TOKEN |
+| **Use Case 4:** Intelligent Refactoring | **Minimal** | None (rule-based tools) |
+| **Use Case 5:** Security Vulnerability Auto-Fixer | **Standard** | GITHUB_TOKEN |
+| **Use Case 6:** Migration Assistant | **Minimal** or **Full*** | None (2to3) or ANTHROPIC_API_KEY (AI) |
 
-\* For CI use, consider creating a "CI-AI" tier: ANTHROPIC_API_KEY + GITHUB_TOKEN without governance overhead (see section below)
+\* For CI use with AI features, consider creating a custom "CI-AI" tier: ANTHROPIC_API_KEY + GITHUB_TOKEN without governance overhead (see section below)
 
 **Rule of thumb:**
 - Use Tier 1 (Minimal) for CI unless you need GitHub API integration

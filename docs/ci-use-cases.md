@@ -33,7 +33,7 @@ Integrating AI-powered MCP capabilities into automated CI/CD pipelines (not just
 |----------|-----------------|------------------|
 | **Use Case 1:** Automated Code Review Bot | **Full*** | ANTHROPIC_API_KEY + GITHUB_TOKEN |
 | **Use Case 2:** Auto-Generate Tests | **Full*** | ANTHROPIC_API_KEY |
-| **Use Case 3:** Auto-Documentation | **Standard** | GITHUB_TOKEN |
+| **Use Case 3:** Auto-Documentation (AI) | **Full*** | ANTHROPIC_API_KEY + GITHUB_TOKEN |
 | **Use Case 4:** Intelligent Refactoring | **Minimal** | None (rule-based tools) |
 | **Use Case 5:** Security Vulnerability Auto-Fixer | **Standard** | GITHUB_TOKEN |
 | **Use Case 6:** Migration Assistant | **Minimal** or **Full*** | None (2to3) or ANTHROPIC_API_KEY (AI) |
@@ -395,7 +395,9 @@ EOF
 
 **Goal:** When code merges to main, AI updates documentation automatically.
 
-**Tier:** Standard (needs GitHub MCP to create PR with docs)
+**Tier:** Full (requires ANTHROPIC_API_KEY for AI doc generation + GITHUB_TOKEN for PR creation)
+
+> **Note:** For non-AI documentation (extracting docstrings, running Sphinx), use Tier 2 (Standard) with tools like `pydoc` or `sphinx-build`.
 
 ### Jenkins Pipeline Implementation
 
@@ -405,6 +407,7 @@ pipeline {
     agent any
 
     environment {
+        ANTHROPIC_API_KEY = credentials('anthropic-api-key-id')
         GITHUB_TOKEN = credentials('github-token-id')
     }
 
@@ -423,11 +426,11 @@ pipeline {
         stage('Setup Agentic Workspace') {
             steps {
                 sh '''
-                    # Use Tier 2 (GitHub integration needed)
-                    cp .devfile-ci-standard.yaml .devfile.yaml
+                    # Use Tier 3 (Full - AI + GitHub integration)
+                    cp .devfile-ci-full.yaml .devfile.yaml
                     mkdir -p .mcp
-                    cp mcp-config-ci-standard.json .mcp/config.json
-                    echo "✓ Agentic workspace configured (standard tier)"
+                    cp mcp-config-ci-full.json .mcp/config.json
+                    echo "✓ Agentic workspace configured (full tier)"
                 '''
             }
         }
@@ -439,10 +442,47 @@ pipeline {
                     echo "Analyzing codebase..."
                     FILES_CHANGED=$(git diff HEAD~1 --name-only | grep -E '\\.(py|js|go)$')
 
-                    # AI generates/updates docs
+                    # AI generates/updates docs for each changed file
                     for FILE in $FILES_CHANGED; do
-                        echo "Updating docs for $FILE..."
-                        python ai-doc-generator.py --file "$FILE" --output docs/
+                        echo "Generating documentation for $FILE..."
+
+                        # Read source code (Filesystem MCP)
+                        SOURCE_CODE=$(cat "$FILE")
+
+                        # Determine doc filename
+                        BASENAME=$(basename "$FILE" .py)
+                        DOC_FILE="docs/${BASENAME}.md"
+
+                        # Call Anthropic API to generate markdown documentation
+                        curl -s https://api.anthropic.com/v1/messages \\
+                          -H "x-api-key: $ANTHROPIC_API_KEY" \\
+                          -H "anthropic-version: 2023-06-01" \\
+                          -H "content-type: application/json" \\
+                          -d @- <<APICALL | jq -r '.content[0].text' > "$DOC_FILE"
+{
+  "model": "claude-3-5-sonnet-20241022",
+  "max_tokens": 4096,
+  "messages": [{
+    "role": "user",
+    "content": "Generate comprehensive markdown documentation for this code. Include:
+- Overview and purpose
+- Class/function descriptions
+- Parameters and return values
+- Usage examples
+- Any important notes or caveats
+
+Source file: $FILE
+
+\\\`\\\`\\\`python
+$SOURCE_CODE
+\\\`\\\`\\\`
+
+Write in clear markdown format suitable for a docs/ directory."
+  }]
+}
+APICALL
+
+                        echo "  ✓ Generated $DOC_FILE"
                     done
 
                     # Check if docs changed
@@ -487,6 +527,16 @@ pipeline {
 - AI analyzes changed code
 - Documentation updated automatically
 - PR created for review
+
+**What actually happens:**
+1. **Git** detects files changed in last commit (`.py`, `.js`, `.go` files)
+2. **Filesystem MCP** reads each source file's code
+3. **Anthropic API** (Claude) analyzes code and generates markdown documentation
+4. **Filesystem MCP** writes documentation to `docs/` directory
+5. **Git MCP** creates new branch, commits docs
+6. **GitHub MCP** creates PR with the updated documentation
+
+**Key point:** This is Tier 3 (Full) because AI-generating documentation requires `ANTHROPIC_API_KEY`. For simple doc extraction (non-AI), use Tier 2 with tools like `pydoc` or `sphinx-build`.
 
 ---
 

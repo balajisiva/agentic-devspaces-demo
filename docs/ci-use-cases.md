@@ -12,14 +12,11 @@ This document shows real-world examples of using agentic MCP workspaces in produ
 **What is "Using in CI"?**
 
 Integrating AI-powered MCP capabilities into automated CI/CD pipelines (not just developer workspaces):
-- **Tekton** pipelines (OpenShift native - recommended for Red Hat environments)
-- **OpenShift Pipelines** (Tekton-based)
-- **Jenkins** pipelines (with OpenShift integration)
-- **GitHub Actions** (with Red Hat runners)
-- **GitLab CI** (with RHEL runners)
-- **ArgoCD workflows**
+- **OpenShift Pipelines (Tekton)** - Native to OpenShift, enterprise-grade (recommended ⭐)
+- **Jenkins on OpenShift** - Traditional CI/CD, well-integrated with OpenShift
+- **GitHub Actions** - For teams using GitHub (with self-hosted RHEL runners)
 
-> **Red Hat Focus:** All examples use Red Hat Universal Base Images (UBI) and prioritize OpenShift-native tooling (Tekton/OpenShift Pipelines).
+> **Red Hat/OpenShift Focus:** All examples use Red Hat Universal Base Images (UBI) and prioritize OpenShift-native tooling. OpenShift Pipelines (Tekton) is built into OpenShift and provides cloud-native CI/CD without additional installations.
 
 **Key Benefits:**
 - Automated code analysis and review
@@ -383,76 +380,113 @@ pipeline {
 
 **Tier:** Minimal (local operations only)
 
-### GitLab CI Implementation
+### OpenShift Pipelines (Tekton) Implementation - Recommended
 
 ```yaml
-# .gitlab-ci.yml
-stages:
-  - analyze
-  - refactor
-  - test
+# tekton/pipeline-ai-refactoring.yaml
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: ai-refactoring-pipeline
+  namespace: ci-pipelines
+spec:
+  workspaces:
+    - name: source-code
 
-variables:
-  MCP_TIER: "minimal"
+  params:
+    - name: git-url
+      type: string
+    - name: git-revision
+      type: string
+      default: main
 
-ai-code-analysis:
-  stage: analyze
-  image: quay.io/devfile/universal-developer-image:ubi8-latest
-  script:
-    # Setup agentic workspace (Tier 1 - no tokens)
-    - cp .devfile-ci-minimal.yaml .devfile.yaml
-    - mkdir -p .mcp
-    - cp mcp-config-ci-minimal.json .mcp/config.json
+  tasks:
+    # Task 1: Clone repository
+    - name: git-clone
+      taskRef:
+        name: git-clone
+      params:
+        - name: url
+          value: $(params.git-url)
+        - name: revision
+          value: $(params.git-revision)
+      workspaces:
+        - name: output
+          workspace: source-code
 
-    # AI analyzes code using Filesystem MCP
-    - python ai-code-analyzer.py --scan . --output analysis-report.json
+    # Task 2: AI Code Analysis
+    - name: ai-analyze
+      runAfter: [git-clone]
+      taskSpec:
+        workspaces:
+          - name: source
+        steps:
+          - name: analyze-code
+            image: quay.io/devfile/universal-developer-image:ubi8-latest
+            script: |
+              #!/bin/bash
+              cd $(workspaces.source.path)
 
-    # Store analysis results
-  artifacts:
-    paths:
-      - analysis-report.json
-    expire_in: 1 hour
+              # Setup agentic workspace (Tier 1 - no tokens)
+              cp .devfile-ci-minimal.yaml .devfile.yaml
+              mkdir -p .mcp
+              cp mcp-config-ci-minimal.json .mcp/config.json
 
-ai-refactoring:
-  stage: refactor
-  image: quay.io/devfile/universal-developer-image:ubi8-latest
-  dependencies:
-    - ai-code-analysis
-  script:
-    # Setup agentic workspace
-    - cp .devfile-ci-minimal.yaml .devfile.yaml
-    - mkdir -p .mcp
-    - cp mcp-config-ci-minimal.json .mcp/config.json
+              # AI analyzes code using Filesystem MCP
+              python ai-code-analyzer.py --scan . --output analysis-report.json
 
-    # AI reads analysis report
-    - |
-      if [ -s analysis-report.json ]; then
-        echo "Issues found, applying AI refactoring..."
+              echo "✓ Code analysis complete"
+      workspaces:
+        - name: source
+          workspace: source-code
 
-        # AI refactors code based on analysis
-        python ai-refactor.py --input analysis-report.json
+    # Task 3: AI Refactoring
+    - name: ai-refactor
+      runAfter: [ai-analyze]
+      taskSpec:
+        workspaces:
+          - name: source
+        steps:
+          - name: apply-refactoring
+            image: quay.io/devfile/universal-developer-image:ubi8-latest
+            script: |
+              #!/bin/bash
+              cd $(workspaces.source.path)
 
-        # Commit refactored code using Git MCP
-        git config user.email "ai-bot@company.com"
-        git config user.name "AI Refactoring Bot"
-        git add .
-        git commit -m "AI-automated refactoring based on code analysis" || true
-      else
-        echo "No issues found, skipping refactoring"
-      fi
-  artifacts:
-    paths:
-      - "**/*.py"
-    expire_in: 1 hour
+              # Setup agentic workspace
+              cp .devfile-ci-minimal.yaml .devfile.yaml
+              mkdir -p .mcp
+              cp mcp-config-ci-minimal.json .mcp/config.json
 
-run-tests:
-  stage: test
-  image: python:3.9
-  dependencies:
-    - ai-refactoring
-  script:
-    - pip install pytest
-    - pytest tests/ --verbose
+              # AI reads analysis report and refactors
+              if [ -s analysis-report.json ]; then
+                echo "Issues found, applying AI refactoring..."
+
+                # AI refactors code based on analysis
+                python ai-refactor.py --input analysis-report.json
+
+                # Commit refactored code using Git MCP
+                git config user.email "ai-bot@redhat.com"
+                git config user.name "AI Refactoring Bot"
+                git add .
+                git commit -m "AI-automated refactoring based on code analysis" || true
+
+                echo "✓ Refactoring applied"
+              else
+                echo "No issues found, skipping refactoring"
+              fi
+      workspaces:
+        - name: source
+          workspace: source-code
+
+    # Task 4: Run Tests
+    - name: run-tests
+      runAfter: [ai-refactor]
+      taskRef:
+        name: pytest
+      workspaces:
+        - name: source
+          workspace: source-code
 ```
 
 **Expected Outcome:**
@@ -686,16 +720,17 @@ echo "✓ Migration complete and committed"
 **Run in any CI platform:**
 
 ```yaml
-# GitHub Actions
+# OpenShift Pipelines (Tekton)
+- name: migration-task
+  script: |
+    bash ./scripts/ai-migration-assistant.sh
+
+# Jenkins on OpenShift
+sh './scripts/ai-migration-assistant.sh'
+
+# GitHub Actions (self-hosted RHEL runner)
 - name: Python 2 to 3 Migration
   run: ./scripts/ai-migration-assistant.sh
-
-# GitLab CI
-script:
-  - bash scripts/ai-migration-assistant.sh
-
-# Jenkins
-sh './scripts/ai-migration-assistant.sh'
 ```
 
 **Expected Outcome:**

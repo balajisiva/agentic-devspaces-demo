@@ -220,7 +220,7 @@ Agentic workspaces aren't just for developers - they power **production CI/CD pi
 | **Standard** | GITHUB_TOKEN | PR creation, GitHub integration | One secret |
 | **Full** | All tokens | Developer workspaces + governance | Complete setup |
 
-See [**CI_USE_CASES.md**](CI_USE_CASES.md) for complete examples with Tekton, Jenkins, GitHub Actions, and GitLab CI.
+See [**CI_USE_CASES.md**](CI_USE_CASES.md) for complete examples with OpenShift Pipelines (Tekton), Jenkins on OpenShift, and GitHub Actions.
 
 **Quick start for CI:**
 ```bash

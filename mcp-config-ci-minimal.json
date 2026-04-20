@@ -1,0 +1,37 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/workspace"],
+      "description": "Filesystem access for the workspace",
+      "enabled": true,
+      "governance": {
+        "allowed_paths": ["/workspace"],
+        "restricted_operations": [],
+        "audit_logging": false
+      }
+    },
+    "git": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-git"],
+      "description": "Local git operations (commits, diffs, branches)",
+      "enabled": true,
+      "governance": {
+        "require_approval": [],
+        "audit_logging": false
+      }
+    }
+  },
+  "governance": {
+    "enabled": false,
+    "audit_log_path": "",
+    "require_authentication": false,
+    "network_isolation": "none",
+    "secret_management": "none"
+  },
+  "skills": {
+    "enabled": false,
+    "skills_directory": "",
+    "pre_installed_skills": []
+  }
+}

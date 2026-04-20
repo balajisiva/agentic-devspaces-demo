@@ -1,0 +1,65 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/workspace"],
+      "description": "Filesystem access for the workspace",
+      "enabled": true,
+      "governance": {
+        "allowed_paths": ["/workspace"],
+        "restricted_operations": ["delete_project_files"],
+        "audit_logging": true
+      }
+    },
+    "git": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-git"],
+      "description": "Git operations in governed environment",
+      "enabled": true,
+      "governance": {
+        "require_approval": ["push", "force-push"],
+        "audit_logging": true
+      }
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "description": "GitHub API integration",
+      "enabled": true,
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      },
+      "governance": {
+        "read_only": false,
+        "audit_logging": true,
+        "require_approval": ["create_pr", "merge_pr"]
+      }
+    },
+    "browser": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-puppeteer"],
+      "description": "Headless browser for web automation",
+      "enabled": false,
+      "governance": {
+        "allowed_domains": ["*.redhat.com", "*.openshift.com"],
+        "audit_logging": true
+      }
+    }
+  },
+  "governance": {
+    "enabled": true,
+    "audit_log_path": "/workspace/.mcp/audit.log",
+    "require_authentication": true,
+    "network_isolation": "cluster-only",
+    "secret_management": "vault-integration"
+  },
+  "skills": {
+    "enabled": true,
+    "skills_directory": "/workspace/.claude/skills",
+    "pre_installed_skills": [
+      "code-review",
+      "test-generation",
+      "documentation"
+    ]
+  }
+}

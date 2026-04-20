@@ -1,0 +1,113 @@
+schemaVersion: 2.2.0
+metadata:
+  name: agentic-devspace-ci-minimal
+  displayName: Agentic DevSpace - CI Minimal (No Tokens Required)
+  description: Zero-friction MCP setup for CI pipelines - filesystem and local git only
+  tags:
+    - Python
+    - FastAPI
+    - AI-Agent
+    - MCP
+    - CI-Minimal
+  projectType: Python
+  language: Python
+  version: 1.0.0
+
+# Parent devfile provides base Python environment
+parent:
+  uri: https://registry.devfile.io/devfiles/python
+  version: latest
+
+# Component definitions
+components:
+  # Main application container with minimal AI agent tools
+  - name: python-agentic-runtime
+    container:
+      image: quay.io/devfile/universal-developer-image:ubi8-latest
+      memoryLimit: 2Gi
+      memoryRequest: 512Mi
+      cpuLimit: 1000m
+      cpuRequest: 200m
+      mountSources: true
+      env:
+        # MCP Server Configuration - Minimal tier
+        - name: MCP_SERVERS
+          value: "filesystem,git"
+        - name: MCP_CONFIG_TIER
+          value: "minimal"
+        # No token requirements for minimal tier
+        - name: AGENT_WORKSPACE_TYPE
+          value: "ci-minimal"
+        - name: ENABLE_MCP
+          value: "true"
+      endpoints:
+        - name: fastapi-app
+          targetPort: 8000
+          exposure: public
+          protocol: http
+
+  # MCP Server configuration volume
+  - name: mcp-config
+    volume:
+      size: 1Gi
+
+# Commands to run in the workspace
+commands:
+  # Install dependencies
+  - id: install-dependencies
+    exec:
+      component: python-agentic-runtime
+      commandLine: |
+        pip install -r requirements.txt
+      workingDir: ${PROJECT_SOURCE}
+      group:
+        kind: build
+        isDefault: true
+
+  # Setup MCP servers - minimal tier
+  - id: setup-mcp-servers
+    exec:
+      component: python-agentic-runtime
+      commandLine: |
+        echo "Setting up MCP servers (minimal tier - no tokens required)..."
+        mkdir -p ${PROJECT_SOURCE}/.mcp
+        cp ${PROJECT_SOURCE}/mcp-config-ci-minimal.json ${PROJECT_SOURCE}/.mcp/config.json
+        echo "✓ MCP servers configured: filesystem, git (local only)"
+        echo "✓ No authentication tokens required"
+      workingDir: ${PROJECT_SOURCE}
+      group:
+        kind: build
+
+  # Run the application
+  - id: run-app
+    exec:
+      component: python-agentic-runtime
+      commandLine: |
+        uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+      workingDir: ${PROJECT_SOURCE}
+      group:
+        kind: run
+        isDefault: true
+
+  # Validate agent configuration
+  - id: validate-agent-config
+    exec:
+      component: python-agentic-runtime
+      commandLine: |
+        echo "Validating Agentic Workspace Configuration (CI-Minimal)..."
+        echo "✓ MCP Servers: ${MCP_SERVERS}"
+        echo "✓ Workspace Type: ${AGENT_WORKSPACE_TYPE}"
+        echo "✓ Tier: minimal (no tokens required)"
+        echo "✓ Capabilities: filesystem access, local git operations"
+        echo "Validation complete."
+      workingDir: ${PROJECT_SOURCE}
+      group:
+        kind: test
+
+# Events - automatic setup on workspace start
+events:
+  postStart:
+    - install-dependencies
+    - setup-mcp-servers
+  preStop:
+    - "echo 'Shutting down agentic workspace (minimal tier)...'"

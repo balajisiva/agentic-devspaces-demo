@@ -1,0 +1,124 @@
+schemaVersion: 2.2.0
+metadata:
+  name: agentic-devspace-ci-standard
+  displayName: Agentic DevSpace - CI Standard (GitHub Integration)
+  description: MCP setup with GitHub integration - requires GITHUB_TOKEN
+  tags:
+    - Python
+    - FastAPI
+    - AI-Agent
+    - MCP
+    - CI-Standard
+  projectType: Python
+  language: Python
+  version: 1.0.0
+
+# Parent devfile provides base Python environment
+parent:
+  uri: https://registry.devfile.io/devfiles/python
+  version: latest
+
+# Component definitions
+components:
+  # Main application container with GitHub MCP integration
+  - name: python-agentic-runtime
+    container:
+      image: quay.io/devfile/universal-developer-image:ubi8-latest
+      memoryLimit: 2Gi
+      memoryRequest: 512Mi
+      cpuLimit: 1000m
+      cpuRequest: 200m
+      mountSources: true
+      env:
+        # MCP Server Configuration - Standard tier
+        - name: MCP_SERVERS
+          value: "filesystem,git,github"
+        - name: MCP_CONFIG_TIER
+          value: "standard"
+        # GitHub token required for this tier
+        - name: GITHUB_TOKEN
+          value: "${GITHUB_TOKEN}"
+        - name: AGENT_WORKSPACE_TYPE
+          value: "ci-standard"
+        - name: ENABLE_MCP
+          value: "true"
+      endpoints:
+        - name: fastapi-app
+          targetPort: 8000
+          exposure: public
+          protocol: http
+
+  # MCP Server configuration volume
+  - name: mcp-config
+    volume:
+      size: 1Gi
+
+# Commands to run in the workspace
+commands:
+  # Install dependencies
+  - id: install-dependencies
+    exec:
+      component: python-agentic-runtime
+      commandLine: |
+        pip install -r requirements.txt
+      workingDir: ${PROJECT_SOURCE}
+      group:
+        kind: build
+        isDefault: true
+
+  # Setup MCP servers - standard tier
+  - id: setup-mcp-servers
+    exec:
+      component: python-agentic-runtime
+      commandLine: |
+        echo "Setting up MCP servers (standard tier - GitHub integration)..."
+        mkdir -p ${PROJECT_SOURCE}/.mcp
+        cp ${PROJECT_SOURCE}/mcp-config-ci-standard.json ${PROJECT_SOURCE}/.mcp/config.json
+        echo "✓ MCP servers configured: filesystem, git, github"
+        if [ -z "$GITHUB_TOKEN" ]; then
+          echo "⚠ WARNING: GITHUB_TOKEN not set - GitHub MCP will not function"
+        else
+          echo "✓ GITHUB_TOKEN detected"
+        fi
+      workingDir: ${PROJECT_SOURCE}
+      group:
+        kind: build
+
+  # Run the application
+  - id: run-app
+    exec:
+      component: python-agentic-runtime
+      commandLine: |
+        uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+      workingDir: ${PROJECT_SOURCE}
+      group:
+        kind: run
+        isDefault: true
+
+  # Validate agent configuration
+  - id: validate-agent-config
+    exec:
+      component: python-agentic-runtime
+      commandLine: |
+        echo "Validating Agentic Workspace Configuration (CI-Standard)..."
+        echo "✓ MCP Servers: ${MCP_SERVERS}"
+        echo "✓ Workspace Type: ${AGENT_WORKSPACE_TYPE}"
+        echo "✓ Tier: standard (requires GITHUB_TOKEN)"
+        echo "✓ Capabilities: filesystem, git, GitHub API integration"
+        if [ -z "$GITHUB_TOKEN" ]; then
+          echo "✗ GITHUB_TOKEN: NOT SET"
+        else
+          echo "✓ GITHUB_TOKEN: configured"
+        fi
+        echo "Validation complete."
+      workingDir: ${PROJECT_SOURCE}
+      group:
+        kind: test
+
+# Events - automatic setup on workspace start
+events:
+  postStart:
+    - install-dependencies
+    - setup-mcp-servers
+  preStop:
+    - "echo 'Shutting down agentic workspace (standard tier)...'"

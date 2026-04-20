@@ -1,0 +1,51 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/workspace"],
+      "description": "Filesystem access for the workspace",
+      "enabled": true,
+      "governance": {
+        "allowed_paths": ["/workspace"],
+        "restricted_operations": [],
+        "audit_logging": false
+      }
+    },
+    "git": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-git"],
+      "description": "Local git operations (commits, diffs, branches)",
+      "enabled": true,
+      "governance": {
+        "require_approval": [],
+        "audit_logging": false
+      }
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "description": "GitHub API integration (requires GITHUB_TOKEN)",
+      "enabled": true,
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      },
+      "governance": {
+        "read_only": false,
+        "audit_logging": false,
+        "require_approval": []
+      }
+    }
+  },
+  "governance": {
+    "enabled": false,
+    "audit_log_path": "",
+    "require_authentication": false,
+    "network_isolation": "none",
+    "secret_management": "openshift-secrets"
+  },
+  "skills": {
+    "enabled": false,
+    "skills_directory": "",
+    "pre_installed_skills": []
+  }
+}

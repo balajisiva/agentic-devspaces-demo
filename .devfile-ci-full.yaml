@@ -1,0 +1,166 @@
+schemaVersion: 2.2.0
+metadata:
+  name: agentic-devspace-ci-full
+  displayName: Agentic DevSpace - Full Governance (Developer Workspaces)
+  description: Complete MCP setup with governance, audit logging, and all features
+  tags:
+    - Python
+    - FastAPI
+    - AI-Agent
+    - MCP
+    - Governance
+  projectType: Python
+  language: Python
+  version: 1.0.0
+
+# Parent devfile provides base Python environment
+parent:
+  uri: https://registry.devfile.io/devfiles/python
+  version: latest
+
+# Component definitions
+components:
+  # Main application container with full AI agent capabilities
+  - name: python-agentic-runtime
+    container:
+      image: quay.io/devfile/universal-developer-image:ubi8-latest
+      memoryLimit: 2Gi
+      memoryRequest: 512Mi
+      cpuLimit: 1000m
+      cpuRequest: 200m
+      mountSources: true
+      env:
+        # MCP Server Configuration - Full tier
+        - name: MCP_SERVERS
+          value: "filesystem,git,github,browser"
+        - name: MCP_CONFIG_TIER
+          value: "full"
+        # All tokens required for full tier
+        - name: ANTHROPIC_API_KEY
+          value: "${ANTHROPIC_API_KEY}"
+        - name: GITHUB_TOKEN
+          value: "${GITHUB_TOKEN}"
+        - name: AGENT_WORKSPACE_TYPE
+          value: "governed-cloud"
+        - name: ENABLE_MCP
+          value: "true"
+      endpoints:
+        - name: fastapi-app
+          targetPort: 8000
+          exposure: public
+          protocol: http
+
+  # MCP Server configuration volume
+  - name: mcp-config
+    volume:
+      size: 1Gi
+
+  # Claude Code skills directory
+  - name: claude-skills
+    volume:
+      size: 500Mi
+
+# Commands to run in the workspace
+commands:
+  # Install dependencies including agent SDKs
+  - id: install-dependencies
+    exec:
+      component: python-agentic-runtime
+      commandLine: |
+        pip install -r requirements.txt
+      workingDir: ${PROJECT_SOURCE}
+      group:
+        kind: build
+        isDefault: true
+
+  # Setup MCP servers - full tier
+  - id: setup-mcp-servers
+    exec:
+      component: python-agentic-runtime
+      commandLine: |
+        echo "Setting up MCP servers (full tier - governance enabled)..."
+        mkdir -p ${PROJECT_SOURCE}/.mcp
+        cp ${PROJECT_SOURCE}/mcp-config-ci-full.json ${PROJECT_SOURCE}/.mcp/config.json
+        echo "✓ MCP servers configured: filesystem, git, github, browser"
+        echo "✓ Governance enabled: audit logging, approval gates"
+        if [ -z "$ANTHROPIC_API_KEY" ]; then
+          echo "⚠ WARNING: ANTHROPIC_API_KEY not set"
+        else
+          echo "✓ ANTHROPIC_API_KEY detected"
+        fi
+        if [ -z "$GITHUB_TOKEN" ]; then
+          echo "⚠ WARNING: GITHUB_TOKEN not set"
+        else
+          echo "✓ GITHUB_TOKEN detected"
+        fi
+      workingDir: ${PROJECT_SOURCE}
+      group:
+        kind: build
+
+  # Install Claude Code CLI (for agentic development)
+  - id: install-claude-code
+    exec:
+      component: python-agentic-runtime
+      commandLine: |
+        echo "Installing Claude Code CLI..."
+        npm install -g @anthropic-ai/claude-code || echo "Claude Code installation skipped (requires npm)"
+      workingDir: ${PROJECT_SOURCE}
+      group:
+        kind: build
+
+  # Run the application
+  - id: run-app
+    exec:
+      component: python-agentic-runtime
+      commandLine: |
+        uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+      workingDir: ${PROJECT_SOURCE}
+      group:
+        kind: run
+        isDefault: true
+
+  # Run with agent development mode
+  - id: run-with-agent-dev
+    exec:
+      component: python-agentic-runtime
+      commandLine: |
+        echo "Starting in Agentic Development Mode..."
+        echo "MCP Servers: ${MCP_SERVERS}"
+        uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+      workingDir: ${PROJECT_SOURCE}
+      group:
+        kind: run
+
+  # Validate agent configuration
+  - id: validate-agent-config
+    exec:
+      component: python-agentic-runtime
+      commandLine: |
+        echo "Validating Agentic Workspace Configuration (Full Tier)..."
+        echo "✓ MCP Servers: ${MCP_SERVERS}"
+        echo "✓ Workspace Type: ${AGENT_WORKSPACE_TYPE}"
+        echo "✓ Tier: full (governance enabled)"
+        echo "✓ MCP Enabled: ${ENABLE_MCP}"
+        python -c "import anthropic; print('✓ Anthropic SDK installed:', anthropic.__version__)" || echo "✗ Anthropic SDK not found"
+        if [ -z "$ANTHROPIC_API_KEY" ]; then
+          echo "✗ ANTHROPIC_API_KEY: NOT SET"
+        else
+          echo "✓ ANTHROPIC_API_KEY: configured"
+        fi
+        if [ -z "$GITHUB_TOKEN" ]; then
+          echo "✗ GITHUB_TOKEN: NOT SET"
+        else
+          echo "✓ GITHUB_TOKEN: configured"
+        fi
+        echo "Validation complete."
+      workingDir: ${PROJECT_SOURCE}
+      group:
+        kind: test
+
+# Events - automatic setup on workspace start
+events:
+  postStart:
+    - install-dependencies
+    - setup-mcp-servers
+  preStop:
+    - "echo 'Shutting down agentic workspace (full tier)...'"

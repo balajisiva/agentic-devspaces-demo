@@ -181,11 +181,20 @@ See our **[Business Value Guide](business-value)** for ROI analysis:
 
 ## Documentation
 
-- 📘 **[Quick Start (5 min)](quickstart)** - Get up and running fast
-- 🚀 **[CI/CD Use Cases](ci-use-cases)** - 6 real-world examples with code
-- 📦 **[Deployment Guide](deployment-ci)** - Complete setup instructions
-- 💰 **[Business Value](business-value)** - ROI analysis & stakeholder talking points
-- 🏗️ **[Architecture](https://github.com/balajisiva/agentic-devspaces-demo/blob/main/PROJECT_STRUCTURE.md)** - Technical deep dive
+**📘 [Quick Start (5 min)](quickstart)**
+Get up and running fast
+
+**🚀 [CI/CD Use Cases](ci-use-cases)**
+6 real-world examples with code
+
+**📦 [Deployment Guide](deployment-ci)**
+Complete setup instructions
+
+**💰 [Business Value](business-value)**
+ROI analysis & stakeholder talking points
+
+**🏗️ [Architecture](https://github.com/balajisiva/agentic-devspaces-demo/blob/main/PROJECT_STRUCTURE.md)**
+Technical deep dive
 
 ---
 

@@ -3,6 +3,11 @@ layout: default
 title: CI/CD Deployment Guide
 ---
 
+---
+layout: default
+title: CI/CD Deployment Guide
+---
+
 # CI/CD Deployment Guide - Tiered MCP Configurations
 
 This guide helps field teams choose the right tier for their use case and deploy with minimal friction.

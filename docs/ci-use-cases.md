@@ -3,6 +3,11 @@ layout: default
 title: CI/CD Use Cases
 ---
 
+---
+layout: default
+title: CI/CD Use Cases
+---
+
 # CI/CD Use Cases - Agentic Workspaces in Production Pipelines
 
 This document shows real-world examples of using agentic MCP workspaces in production CI/CD pipelines across different platforms.

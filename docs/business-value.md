@@ -3,6 +3,11 @@ layout: default
 title: Business Value & ROI
 ---
 
+---
+layout: default
+title: Business Value & ROI
+---
+
 # Business Value: Agentic Workspaces in OpenShift DevSpaces
 
 ## Executive Summary

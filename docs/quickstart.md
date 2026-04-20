@@ -3,11 +3,6 @@ layout: default
 title: Quick Start Guide
 ---
 
----
-layout: default
-title: Quick Start Guide
----
-
 # Quick Start Guide
 
 ## Test Locally (5 minutes)

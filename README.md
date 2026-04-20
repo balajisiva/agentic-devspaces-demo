@@ -4,7 +4,7 @@
 [![OpenShift DevSpaces](https://img.shields.io/badge/OpenShift-DevSpaces-EE0000?logo=redhat)](https://developers.redhat.com/products/openshift-dev-spaces/overview)
 [![Model Context Protocol](https://img.shields.io/badge/MCP-Enabled-blue)](https://modelcontextprotocol.io)
 
-> **Try it now:** [Open in DevSpaces](#deploy-to-openshift-devspaces) | [Quick Start (5 min)](QUICKSTART.md) | [View Demo](https://github.com/balajisiva/agentic-devspaces-demo)
+> **Try it now:** [Open in DevSpaces](#deploy-to-openshift-devspaces) | [Quick Start (5 min)](QUICKSTART.md) | [CI/CD Use Cases](CI_USE_CASES.md) | [View Demo](https://github.com/balajisiva/agentic-devspaces-demo)
 
 ## Concept: Governed Agentic Development in the Cloud
 
@@ -199,6 +199,37 @@ This PoC demonstrates:
 - ✅ **100% audit coverage** of AI operations
 - ✅ **Consistent environment** across all developers
 - ✅ **Policy enforcement** without developer intervention
+
+## CI/CD Integration
+
+Agentic workspaces aren't just for developers - they power **production CI/CD pipelines** too!
+
+**Real-world CI/CD use cases:**
+- 🤖 **Automated Code Review Bots** - AI reviews every PR and posts suggestions
+- ✅ **Auto-Generate Tests** - Missing tests? AI creates them automatically
+- 📚 **Auto-Documentation** - Docs update themselves when code changes
+- 🔒 **Security Auto-Fixes** - Vulnerabilities get PRs with fixes automatically
+- ♻️ **Intelligent Refactoring** - Code quality improvements on every commit
+- 🔄 **Migration Assistant** - Legacy code upgraded automatically (Python 2→3, etc.)
+
+**Three tiers for different needs:**
+
+| Tier | Tokens Required | Best For | Setup |
+|------|----------------|----------|-------|
+| **Minimal** | None | File ops, local git, code analysis | Zero-config |
+| **Standard** | GITHUB_TOKEN | PR creation, GitHub integration | One secret |
+| **Full** | All tokens | Developer workspaces + governance | Complete setup |
+
+See [**CI_USE_CASES.md**](CI_USE_CASES.md) for complete examples with Tekton, Jenkins, GitHub Actions, and GitLab CI.
+
+**Quick start for CI:**
+```bash
+# Copy the minimal tier config (works immediately, no tokens)
+cp .devfile-ci-minimal.yaml .devfile.yaml
+
+# Or use the helper script
+./setup-ci.sh --tier minimal
+```
 
 ## Conclusion
 

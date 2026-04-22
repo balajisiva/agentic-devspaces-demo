@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="{{ site.lang | default: "en-US" }}">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{{ '/assets/css/style.css?v=' | append: site.github.build_revision | relative_url }}">
+    <title>{{ page.title | default: site.title }}</title>
+  </head>
+  <body>
+
+    <!-- Navigation Bar -->
+    <nav style="background: #161b22; padding: 1rem 2rem; border-bottom: 2px solid #58a6ff; margin-bottom: 2rem;">
+      <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
+        <a href="{{ '/' | relative_url }}" style="color: #58a6ff; font-weight: bold; font-size: 1.2rem; text-decoration: none;">
+          🤖 Agentic DevSpaces
+        </a>
+        <div style="display: flex; gap: 2rem;">
+          <a href="{{ '/' | relative_url }}" style="color: #c9d1d9; text-decoration: none;">Home</a>
+          <a href="{{ '/ci-use-cases' | relative_url }}" style="color: #c9d1d9; text-decoration: none;">CI/CD Use Cases</a>
+          <a href="{{ '/quickstart' | relative_url }}" style="color: #c9d1d9; text-decoration: none;">Quick Start</a>
+          <a href="{{ '/deployment-ci' | relative_url }}" style="color: #c9d1d9; text-decoration: none;">Deployment</a>
+          <a href="{{ '/business-value' | relative_url }}" style="color: #c9d1d9; text-decoration: none;">Business Value</a>
+          <a href="https://github.com/balajisiva/agentic-devspaces-demo" style="color: #c9d1d9; text-decoration: none;">GitHub</a>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container-lg px-3 my-5 markdown-body">
+      {{ content }}
+    </div>
+
+    <footer style="text-align: center; padding: 2rem; color: #8b949e; border-top: 1px solid #30363d; margin-top: 4rem;">
+      <p>© 2026 Red Hat OpenShift DevSpaces | MIT License</p>
+    </footer>
+
+  </body>
+</html>
